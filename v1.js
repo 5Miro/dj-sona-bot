@@ -1,21 +1,17 @@
 const Discord = require("discord.js");
 const fs = require("fs");
+const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
 
-// Prefix to identify commands.
-const prefix = "!";
-// Unique token that allows the bot to login.
+const prefix = "!"; // Prefix to identify commands.
 
 // This client.
 const client = new Discord.Client();
 
-// A youtube downloader required to play music.
-const ytdl = require("ytdl-core");
+// Represents an isolated collection of users and channels and is often referred to as a server.
+var servers = {};
 
 // Create a collection of commands.
 client.commands = new Discord.Collection();
-
-// Represents an isolated collection of users and channels and is often referred to as a server.
-var servers = {};
 
 // Look for commands in the commands folder. They end with .js
 const commandFiles = fs.readdirSync("./commands/").filter((file) => file.endsWith(".js"));
