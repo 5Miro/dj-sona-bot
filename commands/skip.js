@@ -6,7 +6,7 @@ module.exports = {
       return message.channel.send("Debes estar en un canal de voz para detener la música.");
     }
     if (!serverQueue) {
-      return message.channel.send("La cola de reproducción está vacía. No hay canciones para saltear.");
+      return message.channel.send("La cola de reproducción está vacía. No hay canciones para saltear, bro.");
     }
     // End this dispatcher to play the next song.
     serverQueue.connection.dispatcher.end();

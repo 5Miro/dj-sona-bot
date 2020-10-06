@@ -1,7 +1,10 @@
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
 const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
+const Discord = require("discord.js");
 
-const PLAYLIST_MAX_LENGTH = 50;
+const color = "#00c0ff";
+
+const PLAYLIST_MAX_LENGTH = 100;
 
 module.exports = {
   name: "play",
@@ -13,7 +16,7 @@ module.exports = {
     // Validate URL.
     if (!this.validateURL(args[1])) {
       message.react("😢");
-      return message.channel.send("Este link no es válido, invocador. Solo soy compatible con links de Youtube, por el momento.");
+      return message.channel.send("Este link no es válido, invocador. Solo soy compatible con links de Youtube, por el momento u.u .");
     }
 
     // Store the name of the channel.
@@ -50,11 +53,14 @@ module.exports = {
       // Check PLAYLIST_MAX_LENGTH
       if (res.data.playlist.length > PLAYLIST_MAX_LENGTH) {
         message.react("😢");
-        return message.channel.send("Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + PLAYLIST_MAX_LENGTH + ".");
+        return message.channel.send("Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + PLAYLIST_MAX_LENGTH + " u.u .");
       }
 
       // Add all songs to the queue.
       this.enqueueSong(res.data.playlist, message, serverQueue, servers);
+      const embed = new Discord.MessageEmbed();
+      embed.setDescription("**" + res.data.playlist.length + "**" + " canciones han sido agregadas, invocador.").setColor(color);
+      message.channel.send(embed);
       message.react("👍");
     }
   },
@@ -73,7 +79,11 @@ module.exports = {
 
     // Get video's metadata
     const songInfo = await ytdl.getBasicInfo(song);
-    serverQueue.textChannel.send(`Escuchando: **${songInfo.videoDetails.title}**`);
+
+    // Show currently playing.
+    const embed = new Discord.MessageEmbed();
+    embed.setTitle("**Sonando ahora**").setDescription(songInfo.videoDetails.title).setColor(color).setURL(song);
+    serverQueue.textChannel.send(embed);
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
     const dispatcher = serverQueue.connection

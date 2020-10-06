@@ -1,12 +1,12 @@
 const Discord = require("discord.js");
-const index = require("../index.js");
+const color = "#00c0ff";
 
 module.exports = {
   name: "help",
   description: "Show info about the bot",
   execute(message) {
     const embed = new Discord.MessageEmbed()
-      .setColor("#0099ff")
+      .setColor(color)
       .setAuthor("desarrollado por Miro", "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "https://github.com/5Miro")
       .setTitle("DJ Sona - Music Player Bot " + process.env.version)
       .setDescription("Reproduce tanto links invididuales como playlists. Solo compatible con Youtube.")

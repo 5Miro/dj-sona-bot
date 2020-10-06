@@ -1,5 +1,8 @@
 const Discord = require("discord.js");
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
+const color = "#00c0ff";
+
+const LIST_MAX_LENGTH = 5;
 
 module.exports = {
   name: "list",
@@ -9,17 +12,19 @@ module.exports = {
     if (!message.member.voice.channel) {
       return message.channel.send("Debes estar en un canal de voz para ver la cola de reproducción");
     }
+    // Let know that info is loading.
     const firstEmbed = new Discord.MessageEmbed();
-    firstEmbed.setTitle("Cargando información sobre la cola de reproducción...");
+    firstEmbed.setTitle("Cargando información sobre la cola de reproducción...").setColor(color);
     var temp = await message.channel.send(firstEmbed);
 
+    // Create a new embed.
     const embed = new Discord.MessageEmbed();
-    embed.setTitle("Hay " + serverQueue.songs.length + " canciones en la cola, invocador");
+    embed.setTitle("Hay " + serverQueue.songs.length + " canciones en la cola, invocador.").setColor(color);
 
     var songs = [];
-    // Loop through each link and create every song object.
+    // Loop through each link and create an array of titles.
     for (const url of serverQueue.songs) {
-      if (songs.length < 10) {
+      if (songs.length < LIST_MAX_LENGTH) {
         const songInfo = await ytdl.getBasicInfo(url);
         const song = {
           title: songInfo.videoDetails.title,
@@ -28,13 +33,19 @@ module.exports = {
         songs.push(song);
       }
     }
+    // Add a field to the embed per song.
     songs.forEach((song, i) => {
-      if (i < 10) {
-        embed.addField(i + 1 + "- ", song.title);
+      if (i < LIST_MAX_LENGTH) {
+        if (i == 0) {
+          embed.addField(i + 1 + "- (sonando ahora)", song.title);
+        } else {
+          embed.addField(i + 1 + "- ", song.title);
+        }
       }
     });
-    if (songs.length > 10) {
-      embed.addField("...-", "entre otras canciones más.");
+
+    if (serverQueue.songs.length > LIST_MAX_LENGTH) {
+      embed.addField("...", "entre otras canciones más.");
     }
     message.react("👍");
     return temp.edit(embed);
