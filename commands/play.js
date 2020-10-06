@@ -78,7 +78,7 @@ module.exports = {
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
     const dispatcher = serverQueue.connection
       .play(ytdl(song), { filter: "audioonly" })
-      .on("end", () => {
+      .on("finish", () => {
         serverQueue.songs.shift();
         this.play(guild, serverQueue.songs[0], servers);
       })
