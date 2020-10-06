@@ -1,10 +1,7 @@
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
 const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 const Discord = require("discord.js");
-
-const color = "#00c0ff";
-
-const PLAYLIST_MAX_LENGTH = 100;
+const globals = require("../globals");
 
 module.exports = {
   name: "play",
@@ -51,19 +48,22 @@ module.exports = {
       const res = await ytlist(args[1], "url");
 
       // Check PLAYLIST_MAX_LENGTH
-      if (res.data.playlist.length > PLAYLIST_MAX_LENGTH) {
+      if (res.data.playlist.length > globals.PLAYLIST_MAX_LENGTH) {
         message.react("😢");
-        return message.channel.send("Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + PLAYLIST_MAX_LENGTH + " u.u .");
+        return message.channel.send(
+          "Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + globals.PLAYLIST_MAX_LENGTH + " u.u ."
+        );
       }
 
       // Add all songs to the queue.
       this.enqueueSong(res.data.playlist, message, serverQueue, servers);
       const embed = new Discord.MessageEmbed();
-      embed.setDescription("**" + res.data.playlist.length + "**" + " canciones han sido agregadas, invocador.").setColor(color);
+      embed.setDescription("**" + res.data.playlist.length + "**" + " canciones han sido agregadas, invocador.").setColor(globals.COLOR);
       message.channel.send(embed);
       message.react("👍");
     }
   },
+
   // Play a song.
   async play(guild, song, servers) {
     // Look at the map that contains all the music queues from all servers, then look for the server with the guild id from the message.
@@ -82,7 +82,7 @@ module.exports = {
 
     // Show currently playing.
     const embed = new Discord.MessageEmbed();
-    embed.setTitle("**Sonando ahora**").setDescription(songInfo.videoDetails.title).setColor(color).setURL(song);
+    embed.setTitle("**Sonando ahora**").setDescription(songInfo.videoDetails.title).setColor(globals.COLOR).setURL(song);
     serverQueue.textChannel.send(embed);
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
@@ -98,6 +98,7 @@ module.exports = {
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
   },
 
+  // enqueue a song or songs.
   async enqueueSong(songs, message, serverQueue, servers) {
     // Store the name of the channel.
     const voiceChannel = message.member.voice.channel;
@@ -137,14 +138,7 @@ module.exports = {
     }
   },
 
-  async getURLsFromYTPlaylist(message) {
-    message.react("👍");
-
-    let args = message.content.split(" ");
-    const res = await ytlist(args[1], "url");
-    return res.data.playlist;
-  },
-
+  // VALIDATORS
   validateURL(url) {
     return /^(https?\:\/\/)?((www\.)?youtube\.com|youtu\.?be)\/.+$/.test(url);
   },

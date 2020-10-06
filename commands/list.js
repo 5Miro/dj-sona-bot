@@ -1,39 +1,43 @@
 const Discord = require("discord.js");
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
-const color = "#00c0ff";
-
-const LIST_MAX_LENGTH = 5;
+const globals = require("../globals");
 
 module.exports = {
   name: "list",
-  description: "Show all songs in queue",
+  description: "Show songs in queue",
   async execute(message, serverQueue) {
+    // If there's no queue associated with this server.
     if (!serverQueue) return message.channel.send("No hay canciones en la cola de reproducción, invocador.");
-    if (!message.member.voice.channel) {
-      return message.channel.send("Debes estar en un canal de voz para ver la cola de reproducción");
-    }
-    // Let know that info is loading.
+    // If user is not connected to a voice channel.
+    if (!message.member.voice.channel) return message.channel.send("Debes estar en un canal de voz para ver la cola de reproducción");
+
+    // Show loading message.
     const firstEmbed = new Discord.MessageEmbed();
-    firstEmbed.setTitle("Cargando información sobre la cola de reproducción...").setColor(color);
+    firstEmbed.setTitle("Cargando información sobre la cola de reproducción...").setColor(globals.COLOR);
+
+    // Store embed to edit it later when results arrive.
     var temp = await message.channel.send(firstEmbed);
 
-    // Create a new embed.
+    // Create a new embed to edit the previous one.
     const embed = new Discord.MessageEmbed();
-    embed.setTitle("Hay " + serverQueue.songs.length + " canciones en la cola, invocador.").setColor(color);
+    embed.setTitle("Hay " + serverQueue.songs.length + " canciones en la cola, invocador.").setColor(globals.COLOR);
 
+    // Loop through each link and create an array of songs.
     var songs = [];
-    // Loop through each link and create an array of titles.
     for (const url of serverQueue.songs) {
       if (songs.length < LIST_MAX_LENGTH) {
+        // Get song data through ytdl core.
         const songInfo = await ytdl.getBasicInfo(url);
+        // Create song object.
         const song = {
           title: songInfo.videoDetails.title,
           url: songInfo.videoDetails.video_url,
         };
+        // Push it inside the array.
         songs.push(song);
       }
     }
-    // Add a field to the embed per song.
+    // Add a field to the embed. One field per song up to LIST_MAX_LENGTH
     songs.forEach((song, i) => {
       if (i < LIST_MAX_LENGTH) {
         if (i == 0) {
@@ -48,6 +52,7 @@ module.exports = {
       embed.addField("...", "entre otras canciones más.");
     }
     message.react("👍");
+    // Edit the previous embed and return.
     return temp.edit(embed);
   },
 };

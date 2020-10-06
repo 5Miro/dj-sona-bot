@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const fs = require("fs");
+const globals = require("./globals");
 
 const prefix = "!"; // Prefix to identify commands.
 const token = "NzYyMzc1NjA3MzM4MDA4NjA3.X3oPnQ.cow0n3B9dXzYGfbRms_5busU5u0"; // Unique token that allows the bot to login.
@@ -25,12 +26,6 @@ for (const file of commandFiles) {
 client.once("ready", () => {
   console.log("DJ Sona: online");
 });
-client.once("reconnecting", () => {
-  console.log("DJ Sona: reconnecting");
-});
-client.once("disconnect", () => {
-  console.log("DJ Sona: disconnected");
-});
 
 client.on("ready", () => {
   client.user.setActivity("!help");
@@ -41,7 +36,8 @@ client.on("message", async (message) => {
   // If a message does not start with the prefix or the author is the bot itself, then return.
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-  if (!message.member.roles.cache.has("624336056111726632")) {
+  // Check if user has the neccesary role.
+  if (!message.member.roles.cache.has(globals.REQUIRED_ROLE_ID)) {
     message.react("👀");
     message.channel.send("**Ruidos musicales ininteligibles** *(Solo un Invocador puede utilizar este bot)*");
     return;
