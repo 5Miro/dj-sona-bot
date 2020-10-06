@@ -1,4 +1,5 @@
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
+const ytsr = require("ytsr"); // A youtube search resolver.
 const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 const Discord = require("discord.js");
 const globals = require("../globals");
@@ -8,12 +9,22 @@ module.exports = {
   description: "Play a song.",
   async execute(message, serverQueue, servers) {
     // Read the arguments of the command and separate them.
-    let args = message.content.split(" ");
+    let args = message.content.split(/\s+/);
+
+    var url = "";
 
     // Validate URL.
     if (!this.validateURL(args[1])) {
-      message.react("😢");
-      return message.channel.send("Este link no es válido, invocador. Solo soy compatible con links de Youtube, por el momento u.u .");
+      // this is not a URL, let's try a search resolve
+      args.shift(); // remove the command.
+      let searchString = args.join("+"); // create a search string by joining the rest of the strings.
+
+      message.channel.send("Buscando en Youtube...");
+      const resolution = await ytsr(searchString, { limit: 1 });
+      url = resolution.items[0].link;
+    } else {
+      // this is a valid url
+      url = args[1];
     }
 
     // Store the name of the channel.
@@ -35,17 +46,17 @@ module.exports = {
     }
 
     // Validate again to tell whether it's a song or a playlist.
-    if (!this.validatePlaylistURL(args[1])) {
+    if (!this.validatePlaylistURL(url)) {
       // this is a single song.
 
       // Add the song to the queue.
-      this.enqueueSong(args[1]);
+      this.enqueueSong(url, message, serverQueue, servers);
       message.react("👍");
     } else {
       // this is a playlist.
 
       // Get an array made of every link from the playlist.
-      const res = await ytlist(args[1], "url");
+      const res = await ytlist(url, "url");
 
       // Check PLAYLIST_MAX_LENGTH
       if (res.data.playlist.length > globals.PLAYLIST_MAX_LENGTH) {

@@ -8,8 +8,8 @@ module.exports = {
     const embed = new Discord.MessageEmbed()
       .setColor(globals.COLOR)
       .setAuthor("desarrollado por Miro", "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "https://github.com/5Miro")
-      .setTitle("DJ Sona - Music Player Bot " + process.env.version)
-      .setDescription("Reproduce tanto links invididuales como playlists. Solo compatible con Youtube.")
+      .setTitle("DJ Sona - music player bot - " + process.env.version)
+      .setDescription("Reproduce música de Youtube. Acepta también búsquedas y playlists.")
       .addFields({ name: "\u200B", value: "\u200B" })
       .addFields(
         { name: "!play", value: "Agrega canción/es", inline: true },

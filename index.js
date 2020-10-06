@@ -31,10 +31,20 @@ client.on("ready", () => {
   client.user.setActivity("!help");
 });
 
+// Sends a TTS message when a user joins a channel.
+client.on("voiceStateUpdate", (oldState, newState) => {
+  if (!globals.GREETING_ENABLE) return;
+  client.commands.get("greeting").greet(message);
+});
+
 // Function to read messages.
 client.on("message", async (message) => {
-  // If a message does not start with the prefix or the author is the bot itself, then return.
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  // the author is the bot itself, then delete after x time.
+  if (message.author.bot) {
+    message.delete({ timeout: globals.MESSAGE_TIMEOUT });
+  }
+  // If a message does not start with the prefix
+  if (!message.content.startsWith(prefix)) return;
 
   // Check if user has the neccesary role.
   if (!message.member.roles.cache.has(globals.REQUIRED_ROLE_ID)) {
@@ -47,7 +57,7 @@ client.on("message", async (message) => {
   const serverQueue = servers.get(message.guild.id);
 
   // Read the arguments of the command and separate them.
-  let args = message.content.substring(prefix.length).split(" ");
+  let args = message.content.substring(prefix.length).split(/\s+/);
 
   // Read the first arg of the command.
   switch (args[0]) {
@@ -68,6 +78,9 @@ client.on("message", async (message) => {
       return;
     case "hello":
       client.commands.get("hello").execute(message);
+      return;
+    case "greeting":
+      client.commands.get("greeting").toggle(message);
       return;
     default:
       message.channel.send("El comando introducido no es reconocido.");
