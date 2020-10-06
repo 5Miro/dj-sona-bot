@@ -1,6 +1,8 @@
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
 const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 
+const PLAYLIST_MAX_LENGTH = 50;
+
 module.exports = {
   name: "play",
   description: "Play a song.",
@@ -32,38 +34,63 @@ module.exports = {
       return message.channel.send("Me faltan permisos para tocar mi música T_T .");
     }
 
-    // Songs to add.
-    var songs = [];
-
     // Validate again to tell whether it's a song or a playlist.
     if (!this.validatePlaylistURL(args[1])) {
-      // Get info about the song from YTDL
-      const songInfo = await ytdl.getInfo(args[1]);
-      // Create a song object.
-      const song = {
-        title: songInfo.videoDetails.title,
-        url: songInfo.videoDetails.video_url,
-      };
-      // Push it inside the songs array.
-      songs.push(song);
+      // this is a single song.
+
+      // Add the song to the queue.
+      this.enqueueSong(args[1]);
+      message.react("👍");
     } else {
       // this is a playlist.
 
       // Get an array made of every link from the playlist.
       const res = await ytlist(args[1], "url");
-      console.log(res.data.playlist.length);
-      // Loop through each link and create every song object.
-      var i = 0;
-      message.channel.send("Espera mientras cargo las canciones, por favor...");
-      for (const url of res.data.playlist) {
-        const songInfo = await ytdl.getInfo(url);
-        const song = {
-          title: songInfo.videoDetails.title,
-          url: songInfo.videoDetails.video_url,
-        };
-        songs.push(song);
+
+      // Check PLAYLIST_MAX_LENGTH
+      if (res.data.playlist.length > PLAYLIST_MAX_LENGTH) {
+        message.react("😢");
+        return message.channel.send("Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + PLAYLIST_MAX_LENGTH + ".");
       }
+
+      // Add all songs to the queue.
+      this.enqueueSong(res.data.playlist, message, serverQueue, servers);
+      message.react("👍");
     }
+  },
+  // Play a song.
+  async play(guild, song, servers) {
+    // Look at the map that contains all the music queues from all servers, then look for the server with the guild id from the message.
+    const serverQueue = servers.get(guild.id);
+
+    // If there's no songs left, leave the channel and clear this server from the map.
+    if (!song) {
+      serverQueue.voiceChannel.leave();
+      servers.delete(guild.id);
+      serverQueue.connection.disconnect();
+      return;
+    }
+
+    // Get video's metadata
+    const songInfo = await ytdl.getBasicInfo(song);
+    serverQueue.textChannel.send(`Escuchando: **${songInfo.videoDetails.title}**`);
+
+    // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
+    const dispatcher = serverQueue.connection
+      .play(ytdl(song), { filter: "audioonly" })
+      .on("end", () => {
+        serverQueue.songs.shift();
+        this.play(guild, serverQueue.songs[0], servers);
+      })
+      .on("error", (error) => console.error(error));
+
+    // Set the volume.
+    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+  },
+
+  async enqueueSong(songs, message, serverQueue, servers) {
+    // Store the name of the channel.
+    const voiceChannel = message.member.voice.channel;
 
     // If there is no queue associated with this server, create a new one.
     if (!serverQueue) {
@@ -81,7 +108,6 @@ module.exports = {
 
       // Add the song to the queue.
       newQueue.songs = newQueue.songs.concat(songs);
-      message.react("👍");
 
       try {
         // Wait to establish connection with the voice channel.
@@ -98,33 +124,7 @@ module.exports = {
       }
     } else {
       serverQueue.songs = serverQueue.songs.concat(songs);
-      return message.react("👍");
     }
-  },
-  // Play a song.
-  play(guild, song, servers) {
-    // Look at the map that contains all the music queues from all servers, then look for the server with the guild id from the message.
-    const serverQueue = servers.get(guild.id);
-
-    // If there's no songs left, leave the channel and clear this server from the map.
-    if (!song) {
-      serverQueue.voiceChannel.leave();
-      servers.delete(guild.id);
-      return;
-    }
-
-    // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
-    const dispatcher = serverQueue.connection
-      .play(ytdl(song.url), { filter: "audioonly" })
-      .on("finish", () => {
-        serverQueue.songs.shift();
-        this.play(guild, serverQueue.songs[0], servers);
-      })
-      .on("error", (error) => console.error(error));
-
-    // Set the volume.
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`Escuchando: **${song.title}**`);
   },
 
   async getURLsFromYTPlaylist(message) {

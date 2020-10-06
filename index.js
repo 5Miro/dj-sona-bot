@@ -62,7 +62,7 @@ client.on("message", async (message) => {
       client.commands.get("skip").execute(message, serverQueue);
       return;
     case "stop":
-      client.commands.get("stop").execute(message, serverQueue);
+      client.commands.get("stop").execute(message, serverQueue, servers);
       return;
     case "list":
       client.commands.get("list").execute(message, serverQueue);
