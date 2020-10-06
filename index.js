@@ -34,7 +34,7 @@ client.on("ready", () => {
 // Sends a TTS message when a user joins a channel.
 client.on("voiceStateUpdate", (oldState, newState) => {
   if (!globals.GREETING_ENABLE) return;
-  client.commands.get("greeting").greet(message);
+  client.commands.get("greeting").greet(oldState, newState);
 });
 
 // Function to read messages.
