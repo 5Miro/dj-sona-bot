@@ -1,4 +1,5 @@
 const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
+const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 
 module.exports = {
   name: "play",
@@ -6,6 +7,12 @@ module.exports = {
   async execute(message, serverQueue, servers) {
     // Read the arguments of the command and separate them.
     let args = message.content.split(" ");
+
+    // Validate URL.
+    if (!this.validateURL(args[1])) {
+      message.react("😢");
+      return message.channel.send("Este link no es válido, invocador. Solo soy compatible con links de Youtube, por el momento.");
+    }
 
     // Store the name of the channel.
     const voiceChannel = message.member.voice.channel;
@@ -22,15 +29,41 @@ module.exports = {
     // Check if bot has the necessary permissions.
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
       message.react("👀");
-      return message.channel.send("Me faltan permisos para tocar mi música.");
+      return message.channel.send("Me faltan permisos para tocar mi música T_T .");
     }
 
-    // Get info about the song from YTDL and create a SONG object.
-    const songInfo = await ytdl.getInfo(args[1]);
-    const song = {
-      title: songInfo.videoDetails.title,
-      url: songInfo.videoDetails.video_url,
-    };
+    // Songs to add.
+    var songs = [];
+
+    // Validate again to tell whether it's a song or a playlist.
+    if (!this.validatePlaylistURL(args[1])) {
+      // Get info about the song from YTDL
+      const songInfo = await ytdl.getInfo(args[1]);
+      // Create a song object.
+      const song = {
+        title: songInfo.videoDetails.title,
+        url: songInfo.videoDetails.video_url,
+      };
+      // Push it inside the songs array.
+      songs.push(song);
+    } else {
+      // this is a playlist.
+
+      // Get an array made of every link from the playlist.
+      const res = await ytlist(args[1], "url");
+      console.log(res.data.playlist.length);
+      // Loop through each link and create every song object.
+      var i = 0;
+      message.channel.send("Espera mientras cargo las canciones, por favor...");
+      for (const url of res.data.playlist) {
+        const songInfo = await ytdl.getInfo(url);
+        const song = {
+          title: songInfo.videoDetails.title,
+          url: songInfo.videoDetails.video_url,
+        };
+        songs.push(song);
+      }
+    }
 
     // If there is no queue associated with this server, create a new one.
     if (!serverQueue) {
@@ -47,7 +80,7 @@ module.exports = {
       servers.set(message.guild.id, newQueue);
 
       // Add the song to the queue.
-      newQueue.songs.push(song);
+      newQueue.songs = newQueue.songs.concat(songs);
       message.react("👍");
 
       try {
@@ -64,7 +97,7 @@ module.exports = {
         return message.channel.send(err);
       }
     } else {
-      serverQueue.songs.push(song);
+      serverQueue.songs = serverQueue.songs.concat(songs);
       return message.react("👍");
     }
   },
@@ -82,7 +115,7 @@ module.exports = {
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
     const dispatcher = serverQueue.connection
-      .play(ytdl(song.url))
+      .play(ytdl(song.url), { filter: "audioonly" })
       .on("finish", () => {
         serverQueue.songs.shift();
         this.play(guild, serverQueue.songs[0], servers);
@@ -92,5 +125,20 @@ module.exports = {
     // Set the volume.
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Escuchando: **${song.title}**`);
+  },
+
+  async getURLsFromYTPlaylist(message) {
+    message.react("👍");
+
+    let args = message.content.split(" ");
+    const res = await ytlist(args[1], "url");
+    return res.data.playlist;
+  },
+
+  validateURL(url) {
+    return /^(https?\:\/\/)?((www\.)?youtube\.com|youtu\.?be)\/.+$/.test(url);
+  },
+  validatePlaylistURL(url) {
+    return /^.*(youtu.be\/|list=)([^#\&\?]*).*/.test(url);
   },
 };

@@ -1,6 +1,6 @@
 module.exports = {
-  name: "ping",
-  description: "This is just a ping command.",
+  name: "hello",
+  description: "Say hello to the bot",
   execute(message) {
     message.react("👍");
     if (message.member.roles.cache.has("624336056111726632")) {

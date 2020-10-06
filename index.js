@@ -1,7 +1,5 @@
 const Discord = require("discord.js");
 const fs = require("fs");
-const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
-const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 
 const prefix = "!"; // Prefix to identify commands.
 const token = "NzYyMzc1NjA3MzM4MDA4NjA3.X3oPnQ.cow0n3B9dXzYGfbRms_5busU5u0"; // Unique token that allows the bot to login.
@@ -72,8 +70,8 @@ client.on("message", async (message) => {
     case "help":
       client.commands.get("help").execute(message);
       return;
-    case "ping":
-      client.commands.get("ping").execute(message);
+    case "hello":
+      client.commands.get("hello").execute(message);
       return;
     default:
       message.channel.send("El comando introducido no es reconocido.");
