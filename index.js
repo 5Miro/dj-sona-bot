@@ -80,7 +80,8 @@ client.on("message", async (message) => {
       client.commands.get("hello").execute(message);
       return;
     case "greeting":
-      client.commands.get("greeting").toggle(message);
+      message.channel.send("Comando inhabilitado temporalmente.");
+      //client.commands.get("greeting").toggle(message);
       return;
     default:
       message.channel.send("El comando introducido no es reconocido.");
