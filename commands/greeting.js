@@ -23,7 +23,7 @@ module.exports = {
       message.channel.send("Los saludos están desactivados.");
     }
   },
-  greet(oldState, newState) {
+  greet(oldState, newState, client) {
     let newChannel = newState.channel;
     let oldChannel = oldState.channel;
     client.channels.fetch(globals.GREETINGS_CHANNEL_ID).then((channel) => {
