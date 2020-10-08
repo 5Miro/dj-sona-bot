@@ -25,7 +25,7 @@ module.exports = {
     // Loop through each link and create an array of songs.
     var songs = [];
     for (const url of serverQueue.songs) {
-      if (songs.length < LIST_MAX_LENGTH) {
+      if (songs.length < globals.LIST_MAX_LENGTH) {
         // Get song data through ytdl core.
         const songInfo = await ytdl.getBasicInfo(url);
         // Create song object.
@@ -39,7 +39,7 @@ module.exports = {
     }
     // Add a field to the embed. One field per song up to LIST_MAX_LENGTH
     songs.forEach((song, i) => {
-      if (i < LIST_MAX_LENGTH) {
+      if (i < globals.LIST_MAX_LENGTH) {
         if (i == 0) {
           embed.addField(i + 1 + "- (sonando ahora)", song.title);
         } else {
@@ -48,7 +48,7 @@ module.exports = {
       }
     });
 
-    if (serverQueue.songs.length > LIST_MAX_LENGTH) {
+    if (serverQueue.songs.length > globals.LIST_MAX_LENGTH) {
       embed.addField("...", "entre otras canciones más.");
     }
     message.react("👍");
