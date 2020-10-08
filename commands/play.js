@@ -19,6 +19,11 @@ module.exports = {
       args.shift(); // remove the command.
       let searchString = args.join("+"); // create a search string by joining the rest of the strings.
 
+      // Is there a second argument?
+      if (!searchString) {
+        return message.channel.send("No has escrito ningún criterio de búsqueda o link, invocador.");
+      }
+
       message.channel.send("Buscando en Youtube...");
       const resolution = await ytsr(searchString, { limit: 1 });
       url = resolution.items[0].link;
@@ -52,6 +57,9 @@ module.exports = {
       // Add the song to the queue.
       this.enqueueSong(url, message, serverQueue, servers);
       message.react("👍");
+      const embed = new Discord.MessageEmbed();
+      embed.setDescription("La canción ha sido agregada a la cola, invocador.").setColor(globals.COLOR);
+      message.channel.send(embed);
     } else {
       // this is a playlist.
 
@@ -97,8 +105,8 @@ module.exports = {
     serverQueue.textChannel.send(embed);
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
-    const dispatcher = serverQueue.connection
-      .play(ytdl(song), { filter: "audioonly" })
+    var dispatcher = serverQueue.connection
+      .play(ytdl(song), { quality: "highestaudio", filter: "audioonly"})
       .on("finish", () => {
         serverQueue.songs.shift();
         this.play(guild, serverQueue.songs[0], servers);
