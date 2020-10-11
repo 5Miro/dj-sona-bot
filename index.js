@@ -30,6 +30,12 @@ client.once("ready", () => {
 client.on("ready", () => {
   client.user.setActivity("!help");
 });
+// Sends a TTS message when a user joins a channel.
+client.on("voiceStateUpdate", (oldState, newState) => {
+  if (!globals.GREETING_ENABLE) return;
+  client.commands.get("greeting").greet(oldState, newState, client);
+});
+
 
 // Function to read messages.
 client.on("message", async (message) => {
@@ -72,6 +78,9 @@ client.on("message", async (message) => {
       return;
     case "hello":
       client.commands.get("hello").execute(message);
+      return;
+    case "greeting":
+      client.commands.get("greeting").toggle(message);
       return;
     default:
       message.channel.send("El comando introducido no es reconocido.");
