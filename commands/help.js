@@ -17,12 +17,15 @@ module.exports = {
         { name: "!skip", value: "Saltea la canción", inline: true },
         { name: "!list", value: "Muestra la cola", inline: true },
         { name: "!help", value: "Muestra ayuda", inline: true },
-        { name: "!hello", value: "Saluda al bot", inline: true }
+        { name: "!hello", value: "Saluda al bot", inline: true },
+        { name: "!pause", value: "Pausa la música", inline: true },
+        { name: "!resume", value: "Continúa la música", inline: true },
+        { name: "!greeting", value: "TTS on/off", inline: true }
       )
       .addFields({ name: "\u200B", value: "\u200B" })
       .setFooter("¡Gracias por usar nuestro bot!");
 
     message.react("❤");
-    message.channel.send(embed);
+    message.channel.send(embed).catch(console.error);
   },
 };

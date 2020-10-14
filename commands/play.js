@@ -1,4 +1,4 @@
-const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
+const ytdl = require("ytdl-core-discord"); // A youtube downloader required to play music.
 const ytsr = require("ytsr"); // A youtube search resolver.
 const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 const Discord = require("discord.js");
@@ -21,7 +21,7 @@ module.exports = {
 
       // Is there a second argument?
       if (!searchString) {
-        return message.channel.send("No has escrito ningún criterio de búsqueda o link, invocador.");
+        return message.channel.send("No has escrito ningún criterio de búsqueda o link, invocador.").catch(console.error);
       }
 
       message.channel.send("Buscando en Youtube...");
@@ -38,7 +38,7 @@ module.exports = {
     // If user is not connected to a voice channel, then return.
     if (!voiceChannel) {
       message.react("👀");
-      return message.channel.send("Necesitas estar en un canal de voz para oír mi música, invocador.");
+      return message.channel.send("Necesitas estar en un canal de voz para oír mi música, invocador.").catch(console.error);
     }
 
     // Get the permissions of this bot.
@@ -47,7 +47,7 @@ module.exports = {
     // Check if bot has the necessary permissions.
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
       message.react("👀");
-      return message.channel.send("Me faltan permisos para tocar mi música T_T .");
+      return message.channel.send("Me faltan permisos para tocar mi música T_T .").catch(console.error);
     }
 
     // Validate again to tell whether it's a song or a playlist.
@@ -71,14 +71,14 @@ module.exports = {
         message.react("😢");
         return message.channel.send(
           "Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + globals.PLAYLIST_MAX_LENGTH + " u.u ."
-        );
+        ).catch(console.error);
       }
 
       // Add all songs to the queue.
       this.enqueueSong(res.data.playlist, message, serverQueue, servers);
       const embed = new Discord.MessageEmbed();
       embed.setDescription("**" + res.data.playlist.length + "**" + " canciones han sido agregadas, invocador.").setColor(globals.COLOR);
-      message.channel.send(embed);
+      message.channel.send(embed).catch(console.error);
       message.react("👍");
     }
   },
@@ -102,11 +102,11 @@ module.exports = {
     // Show currently playing.
     const embed = new Discord.MessageEmbed();
     embed.setTitle("**Sonando ahora**").setDescription(songInfo.videoDetails.title).setColor(globals.COLOR).setURL(song);
-    serverQueue.textChannel.send(embed);
+    serverQueue.textChannel.send(embed).catch(console.error);
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
     var dispatcher = serverQueue.connection
-      .play(ytdl(song), { quality: "highestaudio", filter: "audioonly"})
+      .play(await ytdl(song, {highWaterMark: 1 << 25 }), { type: "opus" })
       .on("finish", () => {
         serverQueue.songs.shift();
         this.play(guild, serverQueue.songs[0], servers);
@@ -142,6 +142,8 @@ module.exports = {
       try {
         // Wait to establish connection with the voice channel.
         var connection = await voiceChannel.join();
+        // Self deaf.
+        await connection.voice.setSelfDeaf(true);
         // Store a reference to the connection object.
         newQueue.connection = connection;
         // Play the first song.

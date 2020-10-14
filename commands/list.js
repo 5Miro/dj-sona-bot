@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const ytdl = require("ytdl-core"); // A youtube downloader required to play music.
+const ytdl = require("ytdl-core-discord"); // A youtube downloader required to play music.
 const globals = require("../globals");
 
 module.exports = {
@@ -7,16 +7,14 @@ module.exports = {
   description: "Show songs in queue",
   async execute(message, serverQueue) {
     // If there's no queue associated with this server.
-    if (!serverQueue) return message.channel.send("No hay canciones en la cola de reproducción, invocador.");
-    // If user is not connected to a voice channel.
-    if (!message.member.voice.channel) return message.channel.send("Debes estar en un canal de voz para ver la cola de reproducción");
+    if (!serverQueue) return message.channel.send("No hay canciones en la cola de reproducción, invocador.").catch(console.error);
 
     // Show loading message.
     const firstEmbed = new Discord.MessageEmbed();
     firstEmbed.setTitle("Cargando información sobre la cola de reproducción...").setColor(globals.COLOR);
 
     // Store embed to edit it later when results arrive.
-    var temp = await message.channel.send(firstEmbed);
+    var temp = await message.channel.send(firstEmbed).catch(console.error);
 
     // Create a new embed to edit the previous one.
     const embed = new Discord.MessageEmbed();

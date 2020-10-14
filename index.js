@@ -3,7 +3,6 @@ const fs = require("fs");
 const globals = require("./globals");
 
 const prefix = "!"; // Prefix to identify commands.
-const token = "NzYyMzc1NjA3MzM4MDA4NjA3.X3oPnQ.cow0n3B9dXzYGfbRms_5busU5u0"; // Unique token that allows the bot to login.
 
 const client = new Discord.Client(); // This client.
 
@@ -28,12 +27,12 @@ client.once("ready", () => {
 });
 
 client.on("ready", () => {
-  client.user.setActivity("!help");
+  client.user.setActivity("!help", {type: "LISTENING"});
 });
 // Sends a TTS message when a user joins a channel.
 client.on("voiceStateUpdate", (oldState, newState) => {
   if (!globals.GREETING_ENABLE) return;
-  client.commands.get("greeting").greet(oldState, newState, client);
+  client.commands.get("greeting").execute(oldState, newState, client);
 });
 
 
@@ -49,7 +48,7 @@ client.on("message", async (message) => {
   // Check if user has the neccesary role.
   if (!message.member.roles.cache.has(globals.REQUIRED_ROLE_ID)) {
     message.react("👀");
-    message.channel.send("**Ruidos musicales ininteligibles** *(Solo un Invocador puede utilizar este bot)*");
+    message.channel.send("**Ruidos musicales ininteligibles** *(Solo un Invocador puede utilizar este bot)*").catch(console.error);
     return;
   }
 
@@ -82,9 +81,15 @@ client.on("message", async (message) => {
     case "greeting":
       client.commands.get("greeting").toggle(message);
       return;
+    case "pause":
+      client.commands.get("pause").execute(message, serverQueue);
+      return;
+    case "resume":
+      client.commands.get("resume").execute(message, serverQueue);
+      return;
     default:
-      message.channel.send("El comando introducido no es reconocido.");
+      message.channel.send("El comando introducido no es reconocido.").catch(console.error);
   }
 });
 
-client.login(token);
+client.login(process.env.token);
