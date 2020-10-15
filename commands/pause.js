@@ -11,7 +11,7 @@ module.exports = {
       // End this dispatcher to play the next song.
       if (serverQueue.playing) {
         serverQueue.playing = false;
-        serverQueue.connection.dispatcher.pause(true);
+        serverQueue.connection.dispatcher.pause(true); // StreamDispatcher object. Sends voice packet data to the voice connection
         return message.channel.send("Reproducción pausada.").catch(console.error);
       }      
     },

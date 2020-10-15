@@ -1,17 +1,33 @@
-const ytdl = require("ytdl-core-discord"); // A youtube downloader required to play music.
-const ytsr = require("ytsr"); // A youtube search resolver.
-const ytlist = require("youtube-playlist"); // extracts links, ids, durations and names from a youtube playlist
 const Discord = require("discord.js");
+const ytdl = require("ytdl-core-discord"); // A youtube downloader required to play music.
 const globals = require("../globals");
+const YouTubeAPI = require("simple-youtube-api");
+const youtube = new YouTubeAPI(process.env.ytAPIKey);
 
 module.exports = {
   name: "play",
   description: "Play a song.",
   async execute(message, serverQueue, servers) {
+    // Get the name of the channel.
+    const voiceChannel = message.member.voice.channel;
+
+    // If user is not connected to a voice channel, then return.
+    if (!voiceChannel) {
+      message.react("👀");
+      return message.channel.send("Necesitas estar en un canal de voz para oír mi música, invocador.").catch(console.error);
+    }
+ 
+    // Get the permissions of this bot.
+    const permissions = voiceChannel.permissionsFor(message.client.user);
+ 
+    // Check if bot has the necessary permissions.
+    if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
+      message.react("👀");
+      return message.channel.send("Me faltan permisos para tocar mi música T_T .").catch(console.error);
+    }
+
     // Read the arguments of the command and separate them.
     let args = message.content.split(/\s+/);
-
-    var url = "";
 
     // Validate URL.
     if (!this.validateURL(args[1])) {
@@ -25,61 +41,86 @@ module.exports = {
       }
 
       message.channel.send("Buscando en Youtube...");
-      const resolution = await ytsr(searchString, { limit: 1 });
-      url = resolution.items[0].link;
-    } else {
-      // this is a valid url
-      url = args[1];
-    }
 
-    // Store the name of the channel.
-    const voiceChannel = message.member.voice.channel;
-
-    // If user is not connected to a voice channel, then return.
-    if (!voiceChannel) {
-      message.react("👀");
-      return message.channel.send("Necesitas estar en un canal de voz para oír mi música, invocador.").catch(console.error);
-    }
-
-    // Get the permissions of this bot.
-    const permissions = voiceChannel.permissionsFor(message.client.user);
-
-    // Check if bot has the necessary permissions.
-    if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-      message.react("👀");
-      return message.channel.send("Me faltan permisos para tocar mi música T_T .").catch(console.error);
-    }
-
-    // Validate again to tell whether it's a song or a playlist.
-    if (!this.validatePlaylistURL(url)) {
-      // this is a single song.
+      // Get video from API.
+      const res = await youtube.searchVideos(searchString, 1);
 
       // Add the song to the queue.
-      this.enqueueSong(url, message, serverQueue, servers);
+      this.enqueueSong(res, message, serverQueue, servers);
+
+      // Respond to message.
       message.react("👍");
       const embed = new Discord.MessageEmbed();
       embed.setDescription("La canción ha sido agregada a la cola, invocador.").setColor(globals.COLOR);
-      message.channel.send(embed);
-    } else {
-      // this is a playlist.
+      return message.channel.send(embed);
+    } 
 
-      // Get an array made of every link from the playlist.
-      const res = await ytlist(url, "url");
+    // Rename to url.
+    const url = args[1];
+    // Instantiate a new embed.
+    const embed = new Discord.MessageEmbed();
+    // Response from API.
+    var res = null;
 
-      // Check PLAYLIST_MAX_LENGTH
-      if (res.data.playlist.length > globals.PLAYLIST_MAX_LENGTH) {
-        message.react("😢");
-        return message.channel.send(
-          "Lo lamento, invocador. La cantidad de canciones en esta playlist excede mi límite de " + globals.PLAYLIST_MAX_LENGTH + " u.u ."
-        ).catch(console.error);
+    // Validate again to tell whether it's a song or a playlist.
+    if (!this.validatePlaylistURL(url)) {  // this is a single song.
+     // Get video from  API.
+      res = await youtube.getVideo(url);
+      // Set embed description.
+      embed.setDescription("La canción ha sido agregada a la cola, invocador.").setColor(globals.COLOR);
+    } else { // this is a playlist.
+      // Get videos from playlist from API.
+      res = await (await youtube.getPlaylist(url)).getVideos();
+      // Set embed description.
+      embed.setDescription("**" + res.length + "**" + " canciones han sido agregadas, invocador.").setColor(globals.COLOR);      
+    } 
+    // Add the song to the queue.    
+    this.enqueueSong(res, message, serverQueue, servers);
+    // React to message
+    message.react("👍");    
+    // Send embed.
+    message.channel.send(embed).catch(console.error);
+  },  
+
+  // enqueue a song or songs.
+  async enqueueSong(songs, message, serverQueue, servers) {
+    // Store the name of the channel.
+    const voiceChannel = message.member.voice.channel;
+
+    // If there is no queue associated with this server, create a new one.
+    if (!serverQueue) {
+      const newQueue = {
+        textChannel: message.channel,
+        voiceChannel: voiceChannel,
+        connection: null,
+        songs: [],
+        volume: 100,
+        playing: true,
+      };
+
+      // Add the queue to the Map with the corresponding guild ID.
+      servers.set(message.guild.id, newQueue);
+
+      // Add the song to the queue.
+      newQueue.songs = newQueue.songs.concat(songs);
+
+      try {
+        // Wait to establish connection with the voice channel. 
+        var connection = await voiceChannel.join(); // join() returns a VoiceConnection object.
+        // Self deaf.
+        await connection.voice.setSelfDeaf(true);
+        // Store a reference to the connection object.
+        newQueue.connection = connection;
+        // Play the first song.
+        this.play(message.guild, newQueue.songs[0], servers);
+      } catch (err) {
+        // if there's an error, clear this server's queue and show the error.
+        console.log(err);
+        servers.delete(message.guild.id);
+        return message.channel.send(err);
       }
-
-      // Add all songs to the queue.
-      this.enqueueSong(res.data.playlist, message, serverQueue, servers);
-      const embed = new Discord.MessageEmbed();
-      embed.setDescription("**" + res.data.playlist.length + "**" + " canciones han sido agregadas, invocador.").setColor(globals.COLOR);
-      message.channel.send(embed).catch(console.error);
-      message.react("👍");
+    } else {
+      serverQueue.songs = serverQueue.songs.concat(songs);
     }
   },
 
@@ -96,67 +137,24 @@ module.exports = {
       return;
     }
 
-    // Get video's metadata
-    const songInfo = await ytdl.getBasicInfo(song);
-
     // Show currently playing.
     const embed = new Discord.MessageEmbed();
-    embed.setTitle("**Sonando ahora**").setDescription(songInfo.videoDetails.title).setColor(globals.COLOR).setURL(song);
+    embed.setTitle("**Sonando ahora**").setDescription(song.title).setColor(globals.COLOR).setURL(song.url);
     serverQueue.textChannel.send(embed).catch(console.error);
 
     // Play the music. When song ends, remove the first song from the queue and play again until there's no more songs.
-    var dispatcher = serverQueue.connection
-      .play(await ytdl(song, {highWaterMark: 1 << 25 }), { type: "opus" })
+    var dispatcher = serverQueue.connection // play() returns a StreamDispatcher object. It sends voice packet data to the voice connection
+      .play(await ytdl(song.url, {highWaterMark: 1 << 25 }), { type: "opus" })
       .on("finish", () => {
+        // Remove the first song from the queue.
         serverQueue.songs.shift();
+        // Play the next song, if any.
         this.play(guild, serverQueue.songs[0], servers);
       })
       .on("error", (error) => console.error(error));
 
-    // Set the volume.
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-  },
-
-  // enqueue a song or songs.
-  async enqueueSong(songs, message, serverQueue, servers) {
-    // Store the name of the channel.
-    const voiceChannel = message.member.voice.channel;
-
-    // If there is no queue associated with this server, create a new one.
-    if (!serverQueue) {
-      const newQueue = {
-        textChannel: message.channel,
-        voiceChannel: voiceChannel,
-        connection: null,
-        songs: [],
-        volume: 5,
-        playing: true,
-      };
-
-      // Add the queue to the Map with the corresponding guild ID.
-      servers.set(message.guild.id, newQueue);
-
-      // Add the song to the queue.
-      newQueue.songs = newQueue.songs.concat(songs);
-
-      try {
-        // Wait to establish connection with the voice channel.
-        var connection = await voiceChannel.join();
-        // Self deaf.
-        await connection.voice.setSelfDeaf(true);
-        // Store a reference to the connection object.
-        newQueue.connection = connection;
-        // Play the first song.
-        this.play(message.guild, newQueue.songs[0], servers);
-      } catch (err) {
-        // if there's an error, clear this server's queue and show the error.
-        console.log(err);
-        servers.delete(message.guild.id);
-        return message.channel.send(err);
-      }
-    } else {
-      serverQueue.songs = serverQueue.songs.concat(songs);
-    }
+    // Sets the volume to 1.
+    dispatcher.setVolumeLogarithmic(serverQueue.volume / 100);
   },
 
   // VALIDATORS

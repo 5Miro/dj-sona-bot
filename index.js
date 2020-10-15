@@ -3,11 +3,11 @@ const fs = require("fs");
 const globals = require("./globals");
 
 const prefix = "!"; // Prefix to identify commands.
-
 const client = new Discord.Client(); // This client.
+var servers = new Map(); // A map that stores servers's queues. They key that identifies the server is the guild ID
 
-// A map that stores servers's queues. They key that identifies the server is the guild ID
-var servers = new Map();
+//////////////////////////////
+//////////////////////////////
 
 client.commands = new Discord.Collection(); // Create a collection of commands.
 
@@ -20,6 +20,9 @@ for (const file of commandFiles) {
 
   client.commands.set(command.name, command);
 }
+
+//////////////////////////////
+//////////////////////////////
 
 // Listeners for the BOT state.
 client.once("ready", () => {
@@ -35,6 +38,8 @@ client.on("voiceStateUpdate", (oldState, newState) => {
   client.commands.get("greeting").execute(oldState, newState, client);
 });
 
+//////////////////////////////
+//////////////////////////////
 
 // Function to read messages.
 client.on("message", async (message) => {

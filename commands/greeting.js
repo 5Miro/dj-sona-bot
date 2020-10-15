@@ -2,7 +2,7 @@ var globals = require("../globals");
 
 module.exports = {
   name: "greeting",
-  description: "toggle tts greetings",
+  description: "Toggle tts greetings.",
   toggle(message) {
     globals.GREETING_ENABLE = !globals.GREETING_ENABLE;
     if (globals.GREETING_ENABLE) {

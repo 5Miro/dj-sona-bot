@@ -3,7 +3,7 @@ const globals = require("../globals");
 
 module.exports = {
   name: "help",
-  description: "Show info about the bot",
+  description: "Show info about the bot.",
   execute(message) {
     const embed = new Discord.MessageEmbed()
       .setColor(globals.COLOR)
