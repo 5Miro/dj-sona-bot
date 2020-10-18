@@ -34,7 +34,8 @@ client.on("ready", () => {
 });
 // Sends a TTS message when a user joins a channel.
 client.on("voiceStateUpdate", (oldState, newState) => {
-  if (!globals.GREETING_ENABLE) return;
+  if (!globals.GREETING_ENABLE) return; // if greetings are disable, return.
+  if (oldState.client.id == client.user.id) return; // if user is the bot itself, return.
   client.commands.get("greeting").execute(oldState, newState, client);
 });
 
@@ -43,16 +44,21 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
 // Function to read messages.
 client.on("message", async (message) => {
-  // the author is the bot itself, then delete after x time.
-  if (message.author.bot) {
+  try {
+    // the author is the bot itself, then delete after x time.
+    if (message.author.bot && !message.deleted) {
     message.delete({ timeout: globals.MESSAGE_TIMEOUT });
   }
+  } catch (err) {
+    console.log("El mensaje no ha podido ser borrado.\n" + err);
+  }
+  
   // If a message does not start with the prefix
   if (!message.content.startsWith(prefix)) return;
 
   // Check if user has the neccesary role.
   if (!message.member.roles.cache.has(globals.REQUIRED_ROLE_ID)) {
-    message.react("👀");
+    message.react("👀").catch(console.error);
     message.channel.send("**Ruidos musicales ininteligibles** *(Solo un Invocador puede utilizar este bot)*").catch(console.error);
     return;
   }

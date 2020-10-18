@@ -17,10 +17,10 @@ module.exports = {
     client.channels.fetch(globals.GREETINGS_CHANNEL_ID).then((channel) => {
       if (oldChannel === null && newChannel !== null) {
         // User connected
-        return channel.send("<@" + newState.member.id + "> " + " has connected.", { tts: true }).catch(console.error);
+        return channel.send("<@" + newState.member.id + "> " + " se ha conectado.", { tts: true }).catch(console.error);
       } else if (newChannel === null) {
         // User disconnected
-        return channel.send("<@" + newState.member.id + "> " + " has disconnected.", { tts: true }).catch(console.error);
+        return channel.send("<@" + newState.member.id + "> " + " se ha desconectado.", { tts: true }).catch(console.error);
       }
     });
   },

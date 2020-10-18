@@ -13,7 +13,7 @@ module.exports = {
 
     // If user is not connected to a voice channel, then return.
     if (!voiceChannel) {
-      message.react("👀");
+      message.react("👀").catch(console.error);
       return message.channel.send("Necesitas estar en un canal de voz para oír mi música, invocador.").catch(console.error);
     }
  
@@ -22,7 +22,7 @@ module.exports = {
  
     // Check if bot has the necessary permissions.
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-      message.react("👀");
+      message.react("👀").catch(console.error);
       return message.channel.send("Me faltan permisos para tocar mi música T_T .").catch(console.error);
     }
 
@@ -40,7 +40,7 @@ module.exports = {
         return message.channel.send("No has escrito ningún criterio de búsqueda o link, invocador.").catch(console.error);
       }
 
-      message.channel.send("Buscando en Youtube...");
+      message.channel.send("Buscando en Youtube...").catch(console.error);
 
       // Get video from API.
       const res = await youtube.searchVideos(searchString, 1);
@@ -49,10 +49,10 @@ module.exports = {
       this.enqueueSong(res, message, serverQueue, servers);
 
       // Respond to message.
-      message.react("👍");
+      message.react("👍").catch(console.error);
       const embed = new Discord.MessageEmbed();
       embed.setDescription("La canción ha sido agregada a la cola, invocador.").setColor(globals.COLOR);
-      return message.channel.send(embed);
+      return message.channel.send(embed).catch(console.error);
     } 
 
     // Rename to url.
@@ -77,7 +77,7 @@ module.exports = {
     // Add the song to the queue.    
     this.enqueueSong(res, message, serverQueue, servers);
     // React to message
-    message.react("👍");    
+    message.react("👍").catch(console.error);    
     // Send embed.
     message.channel.send(embed).catch(console.error);
   },  
