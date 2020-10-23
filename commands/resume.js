@@ -11,7 +11,11 @@ module.exports = {
       // End this dispatcher to play the next song.
       if (!serverQueue.playing) {
         serverQueue.playing = true;
-        serverQueue.connection.dispatcher.resume(); // StreamDispatcher object. Sends voice packet data to the voice connection
+        try {
+          serverQueue.connection.dispatcher.resume(); // StreamDispatcher object. Sends voice packet data to the voice connection
+        } catch (err) {
+          console.log("Exception: resuming dispatcher has failed.");
+        }     
         return message.channel.send("Continuando reproducción.").catch(console.error);
       }      
     },

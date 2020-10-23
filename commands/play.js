@@ -43,7 +43,12 @@ module.exports = {
       message.channel.send("Buscando en Youtube...").catch(console.error);
 
       // Get video from API.
-      const res = await youtube.searchVideos(searchString, 1);
+      const res = null;
+      try {
+        res = await youtube.searchVideos(searchString, 1)
+      } catch (err) {
+        console.log("Exception: searchVideo() from API failed.");
+      }
 
       // Add the song to the queue.
       this.enqueueSong(res, message, serverQueue, servers);
@@ -65,12 +70,22 @@ module.exports = {
     // Validate again to tell whether it's a song or a playlist.
     if (!this.validatePlaylistURL(url)) {  // this is a single song.
      // Get video from  API.
-      res = await youtube.getVideo(url);
+      try {
+        res = await youtube.getVideo(url);
+      } catch (err) {
+        console.log("Exception: getVideo() from API failed.");
+      }
+      
       // Set embed description.
       embed.setDescription("La canción ha sido agregada a la cola, invocador.").setColor(globals.COLOR);
     } else { // this is a playlist.
       // Get videos from playlist from API.
-      res = await (await youtube.getPlaylist(url)).getVideos();
+      try {
+        res = await (await youtube.getPlaylist(url).catch(console.error)).getVideos();
+      } catch (err) {
+        console.log("Exception: getPlaylist() from API failed.");
+      }
+      
       // Set embed description.
       embed.setDescription("**" + res.length + "**" + " canciones han sido agregadas, invocador.").setColor(globals.COLOR);      
     } 
@@ -115,7 +130,7 @@ module.exports = {
         this.play(message.guild, newQueue.songs[0], servers);
       } catch (err) {
         // if there's an error, clear this server's queue and show the error.
-        console.log(err);
+        console.log("Exception: connection to voice channel ailed.");
         servers.delete(message.guild.id);
         return message.channel.send(err);
       }
@@ -131,10 +146,14 @@ module.exports = {
 
     // If there's no songs left, leave the channel and clear this server from the map.
     if (!song) {
-      serverQueue.voiceChannel.leave();
-      servers.delete(guild.id);
-      serverQueue.connection.disconnect();
-      return;
+      try {
+        serverQueue.voiceChannel.leave();
+        servers.delete(guild.id);
+        serverQueue.connection.disconnect();
+        return;
+      } catch (err) {
+        console.log("Exception: disconnection failed.");
+      }      
     }
 
     // Show currently playing.

@@ -9,6 +9,10 @@ module.exports = {
       return message.channel.send("La cola de reproducción está vacía. No hay canciones para saltear, bro.").catch(console.error);
     }
     // End this dispatcher to play the next song.
-    serverQueue.connection.dispatcher.end();
+    try {
+      serverQueue.connection.dispatcher.end();
+    } catch(err) {
+      console.log("Exception: skip command failed.");
+    }    
   },
 };

@@ -9,6 +9,10 @@ module.exports = {
       return message.channel.send("La cola de reproducción está vacía, bro.").catch(console.error);
     }
     serverQueue.songs = [];
-    serverQueue.connection.dispatcher.end();
+    try {
+      serverQueue.connection.dispatcher.end();
+    } catch(err) {
+      console.log("Exception: stop command failed");
+    }
   },
 };
