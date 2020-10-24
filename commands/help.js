@@ -4,11 +4,11 @@ const globals = require("../globals");
 module.exports = {
   name: "help",
   description: "Show info about the bot.",
-  execute(message) {
+  execute(message, serverQueue, servers) {
     const embed = new Discord.MessageEmbed()
       .setColor(globals.COLOR)
       .setAuthor("desarrollado por Miro", "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "https://github.com/5Miro")
-      .setTitle("DJ Sona - music player bot - " + process.env.version)
+      .setTitle("DJ Sona - music player bot - " + process.env.VERSION)
       .setDescription("Reproduce música de Youtube. Acepta también búsquedas y playlists.")
       .addFields({ name: "\u200B", value: "\u200B" })
       .addFields(

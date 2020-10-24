@@ -4,7 +4,7 @@ const globals = require("../globals");
 module.exports = {
   name: "list",
   description: "Show songs in queue.",
-  async execute(message, serverQueue) {
+  async execute(message, serverQueue, servers) {
     // If there's no queue associated with this server.
     if (!serverQueue) return message.channel.send("No hay canciones en la cola de reproducción, invocador.").catch(console.error);
 
@@ -19,7 +19,6 @@ module.exports = {
     const embed = new Discord.MessageEmbed();
     embed.setTitle("Hay " + serverQueue.songs.length + " canciones en la cola, invocador.").setColor(globals.COLOR);
 
-    
     // Add a field to the embed. One field per song up to LIST_MAX_LENGTH
     serverQueue.songs.forEach((song, i) => {
       if (i < globals.LIST_MAX_LENGTH) {

@@ -1,7 +1,7 @@
 module.exports = {
   name: "skip",
   description: "Skip a song",
-  execute(message, serverQueue) {
+  execute(message, serverQueue, servers) {
     if (!message.member.voice.channel) {
       return message.channel.send("Debes estar en un canal de voz para detener la música.").catch(console.error);
     }

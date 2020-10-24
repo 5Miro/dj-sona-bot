@@ -1,3 +1,7 @@
+// Load enviromental variables.
+const dotenv = require("dotenv");
+dotenv.config({ path: "./config.env" });
+
 const Discord = require("discord.js");
 const fs = require("fs");
 const globals = require("./globals");
@@ -30,13 +34,7 @@ client.once("ready", () => {
 });
 
 client.on("ready", () => {
-  client.user.setActivity("!help", {type: "LISTENING"});
-});
-// Sends a TTS message when a user joins a channel.
-client.on("voiceStateUpdate", (oldState, newState) => {
-  if (!globals.GREETING_ENABLE) return; // if greetings are disable, return.
-  if (oldState.client.id == client.user.id) return; // if user is the bot itself, return.
-  client.commands.get("greeting").execute(oldState, newState, client);
+  client.user.setActivity("!help", { type: "LISTENING" });
 });
 
 //////////////////////////////
@@ -47,12 +45,12 @@ client.on("message", async (message) => {
   try {
     // the author is the bot itself, then delete after x time.
     if (message.author.bot && !message.deleted) {
-    message.delete({ timeout: globals.MESSAGE_TIMEOUT });
-  }
+      message.delete({ timeout: globals.MESSAGE_TIMEOUT });
+    }
   } catch (err) {
     console.log("El mensaje no ha podido ser borrado.\n" + err);
   }
-  
+
   // If a message does not start with the prefix
   if (!message.content.startsWith(prefix)) return;
 
@@ -69,38 +67,12 @@ client.on("message", async (message) => {
   // Read the arguments of the command and separate them.
   let args = message.content.substring(prefix.length).split(/\s+/);
 
-  // Read the first arg of the command.
-  switch (args[0]) {
-    case "play":
-      client.commands.get("play").execute(message, serverQueue, servers);
-      return;
-    case "skip":
-      client.commands.get("skip").execute(message, serverQueue);
-      return;
-    case "stop":
-      client.commands.get("stop").execute(message, serverQueue, servers);
-      return;
-    case "list":
-      client.commands.get("list").execute(message, serverQueue);
-      return;
-    case "help":
-      client.commands.get("help").execute(message);
-      return;
-    case "hello":
-      client.commands.get("hello").execute(message);
-      return;
-    case "greeting":
-      client.commands.get("greeting").toggle(message);
-      return;
-    case "pause":
-      client.commands.get("pause").execute(message, serverQueue);
-      return;
-    case "resume":
-      client.commands.get("resume").execute(message, serverQueue);
-      return;
-    default:
-      message.channel.send("El comando introducido no es reconocido.").catch(console.error);
+  if (client.commands.get(args[0])) {
+    client.commands.get(args[0]).execute(message, serverQueue, servers);
+  } else {
+    message.channel.send("El comando introducido no es reconocido.").catch(console.error);
   }
+
 });
 
-client.login(process.env.token);
+client.login(process.env.TOKEN);

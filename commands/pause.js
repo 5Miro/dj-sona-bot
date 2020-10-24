@@ -1,7 +1,7 @@
 module.exports = {
     name: "pause",
     description: "Pause the dispatcher.",
-    execute(message, serverQueue) {
+    execute(message, serverQueue, servers) {
       if (!message.member.voice.channel) {
         return message.channel.send("Debes estar en un canal de voz para ejecutar este comando.").catch(console.error);
       }
