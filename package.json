@@ -9,9 +9,9 @@
   "author": "Miro",
   "license": "GNU",
   "dependencies": {
-    "@discordjs/opus": "^0.3.2",
     "discord.js": "^12.4.1",
     "dotenv": "^8.2.0",
+    "opusscript": "0.0.7",
     "simple-youtube-api": "^5.2.1",
     "ytdl-core": "^3.4.2",
     "ytdl-core-discord": "^1.2.3"
