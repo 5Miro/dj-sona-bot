@@ -6,7 +6,6 @@ const Discord = require("discord.js");
 const fs = require("fs");
 const globals = require("./globals");
 
-const prefix = "!"; // Prefix to identify commands.
 const client = new Discord.Client(); // This client.
 var servers = new Map(); // A map that stores servers's queues. They key that identifies the server is the guild ID
 
@@ -42,35 +41,25 @@ client.on("ready", () => {
 
 // Function to read messages.
 client.on("message", async (message) => {
-  try {
-    // the author is the bot itself, then delete after x time.
-    if (message.author.bot && !message.deleted) {
-      message.delete({ timeout: globals.MESSAGE_TIMEOUT });
-    }
-  } catch (err) {
-    console.log("El mensaje no ha podido ser borrado.\n" + err);
+  if ((message.author.id == client.user.id) && !message.deleted) {
+    message.delete({ timeout: globals.MESSAGE_TIMEOUT }).catch(err => {
+      console.log("El mensaje no ha podido ser borrado.\n" + err);
+    });
   }
 
   // If a message does not start with the prefix
-  if (!message.content.startsWith(prefix)) return;
-
-  // Check if user has the neccesary role.
-  if (!message.member.roles.cache.has(globals.REQUIRED_ROLE_ID)) {
-    message.react("👀").catch(console.error);
-    message.channel.send("**Ruidos musicales ininteligibles** *(Solo un Invocador puede utilizar este bot)*").catch(console.error);
-    return;
-  }
+  if (!message.content.startsWith(globals.prefix)) return;
 
   // Look at the map that contains all the music queues from all servers, then look for the server with the guild id from the message.
   const serverQueue = servers.get(message.guild.id);
 
   // Read the arguments of the command and separate them.
-  let args = message.content.substring(prefix.length).split(/\s+/);
+  let args = message.content.substring(globals.prefix.length).split(/\s+/);
 
   if (client.commands.get(args[0])) {
     client.commands.get(args[0]).execute(message, serverQueue, servers);
   } else {
-    message.channel.send("El comando introducido no es reconocido.").catch(console.error);
+    message.channel.send("El comando introducido no es reconocido, invocador.").catch(console.error);
   }
 
 });

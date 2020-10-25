@@ -1,6 +1,6 @@
 module.exports = {
   name: "skip",
-  description: "Skip a song",
+  description: "Saltea la canción actual.",
   execute(message, serverQueue, servers) {
     if (!message.member.voice.channel) {
       return message.channel.send("Debes estar en un canal de voz para detener la música.").catch(console.error);
@@ -11,8 +11,8 @@ module.exports = {
     // End this dispatcher to play the next song.
     try {
       serverQueue.connection.dispatcher.end();
-    } catch(err) {
+    } catch (err) {
       console.log("Exception: skip command failed.");
-    }    
+    }
   },
 };

@@ -6,7 +6,7 @@ const youtube = new YouTubeAPI(process.env.YOUTUBE_API_KEY);
 
 module.exports = {
   name: "play",
-  description: "Play a song.",
+  description: "Agrega un link de canción o playlist de Youtube, o busca una canción.",
   execute(message, serverQueue, servers) {
     // Get the name of the channel.
     const voiceChannel = message.member.voice.channel;

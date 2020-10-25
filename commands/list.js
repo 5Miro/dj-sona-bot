@@ -3,7 +3,7 @@ const globals = require("../globals");
 
 module.exports = {
   name: "list",
-  description: "Show songs in queue.",
+  description: "Muestra las canciones en cola.",
   async execute(message, serverQueue, servers) {
     // If there's no queue associated with this server.
     if (!serverQueue) return message.channel.send("No hay canciones en la cola de reproducción, invocador.").catch(console.error);

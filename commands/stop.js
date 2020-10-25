@@ -1,6 +1,6 @@
 module.exports = {
   name: "stop",
-  description: "Stop the bot and disconnect it.",
+  description: "Detiene la música y desconecta al bot.",
   execute(message, serverQueue, servers) {
     if (!message.member.voice.channel) {
       return message.channel.send("Debes estar en un canal de voz para detener la música.").catch(console.error);
@@ -11,7 +11,7 @@ module.exports = {
     serverQueue.songs = [];
     try {
       serverQueue.connection.dispatcher.end();
-    } catch(err) {
+    } catch (err) {
       console.log("Exception: stop command failed");
     }
   },
